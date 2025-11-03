@@ -1,35 +1,30 @@
-const THEMES = [
-  { key: 'christmas', label: 'Christmas', categoryId: 15 }, // clothes
-  { key: 'halloween', label: 'Halloween', categoryId: 1 }, // hats
-  { key: 'easter', label: 'Easter', categoryId: 5 }, // boxes (closest fun pick)
-  { key: 'movies', label: 'Movie Cats', categoryId: 4 }, // sunglasses = cinematic vibes
-  { key: 'cartoons', label: 'Cartoonish', categoryId: 3 }, // funny
-];
-
-export default function ThemePicker({ value, onChange }) {
+export default function ThemePicker({ themes = [], active, onSelect }) {
   return (
-    <div className="mx-auto max-w-6xl px-4">
-      <div className="flex flex-wrap gap-2">
-        {THEMES.map((t) => {
-          const active = value?.key === t.key;
-          return (
-            <button
-              key={t.key}
-              onClick={() => onChange(t)}
-              className={
-                'px-3 py-1.5 rounded-full text-sm transition border ' +
-                (active
-                  ? 'bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white border-transparent shadow'
-                  : 'bg-white hover:bg-black/5 text-black border-black/10')
-              }
-            >
-              {t.label}
-            </button>
-          );
-        })}
-      </div>
+    <div className="flex flex-wrap gap-2">
+      {themes.map((th) => {
+        const isActive = th.id === active;
+        return (
+          <button
+            key={th.id}
+            onClick={() => onSelect?.(th.id)}
+            className={
+              'group relative rounded-full border px-4 py-2 text-sm transition ' +
+              (isActive
+                ? 'border-transparent text-white bg-gradient-to-br from-fuchsia-500 to-indigo-500 shadow'
+                : 'border-gray-200 bg-white/80 text-gray-800 hover:bg-white')
+            }
+            title={`${th.label} • ${th.count}`}
+          >
+            <span className="font-medium">{th.label}</span>
+            <span className={
+              'ml-2 rounded-full px-2 py-0.5 text-[11px] leading-none ' +
+              (isActive ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600')
+            }>
+              {th.count}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }
-
-export { THEMES };
