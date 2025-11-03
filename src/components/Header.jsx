@@ -1,29 +1,14 @@
-import React from 'react';
-import LanguageSwitcher from './LanguageSwitcher';
+import { Cat } from 'lucide-react';
 
-export default function Header({ lang, setLang, t }) {
+export default function Header() {
   return (
-    <header className="w-full sticky top-0 z-20 backdrop-blur bg-gradient-to-b from-black/60 to-transparent">
-      <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-extrabold tracking-tight text-white">
-            kitti.cat
-          </h1>
-          <a
-            href="https://t.me/wloserw"
-            target="_blank"
-            rel="noreferrer"
-            className="text-sm text-white/80 hover:text-white underline underline-offset-4"
-          >
-            @wloserw telegram
-          </a>
+    <header className="sticky top-0 z-20 bg-white/70 backdrop-blur border-b border-black/10">
+      <div className="mx-auto max-w-6xl px-4 py-4 flex items-center gap-3">
+        <div className="p-2 rounded-lg bg-gradient-to-br from-fuchsia-500 to-indigo-500 text-white">
+          <Cat className="w-5 h-5" />
         </div>
-        <div className="flex items-center gap-4">
-          <p className="hidden sm:block text-white/70 text-sm">
-            {t('header.tagline')}
-          </p>
-          <LanguageSwitcher lang={lang} onChange={setLang} />
-        </div>
+        <h1 className="text-xl font-semibold tracking-tight">kitti.cat</h1>
+        <span className="ml-2 text-sm text-black/50">one tap to reveal a cat</span>
       </div>
     </header>
   );
