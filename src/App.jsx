@@ -1,11 +1,23 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Header from './components/Header';
 import SearchBar from './components/SearchBar';
 import Suggestions from './components/Suggestions';
 import Gallery from './components/Gallery';
 
+// Map fun "vibes" to TheCatAPI category ids for more variety
+const VIBE_TO_CATEGORY = {
+  funny: 3,
+  boxes: 5,
+  sunglasses: 4,
+  hats: 1,
+  space: 2,
+  clothes: 15,
+  sinks: 14,
+  ties: 7,
+};
+
 // Fetch real cat photos. Primary source: TheCatAPI (no key needed for light usage).
-async function fetchCatImages(query, limit = 28) {
+async function fetchCatImages({ query, vibe, page = 0, limit = 40 }) {
   try {
     const q = (query || '').trim();
 
@@ -24,8 +36,21 @@ async function fetchCatImages(query, limit = 28) {
     const url = new URL('https://api.thecatapi.com/v1/images/search');
     url.searchParams.set('limit', String(limit));
     url.searchParams.set('mime_types', 'jpg,png');
+    url.searchParams.set('order', 'Rand');
+    // Pagination for more cats
+    url.searchParams.set('page', String(page));
+    url.searchParams.set('size', 'med');
+
     // Prefer images with breed info if we resolved a breed id
-    if (breedId) url.searchParams.set('breed_ids', breedId);
+    if (breedId) {
+      url.searchParams.set('breed_ids', breedId);
+    } else {
+      // If a vibe maps to a category id, prefer that for variety
+      const catId = VIBE_TO_CATEGORY[vibe?.toLowerCase?.() || ''];
+      if (catId) url.searchParams.set('category_ids', String(catId));
+      // Encourage images that have breeds when not filtering by category
+      if (!catId) url.searchParams.set('has_breeds', '1');
+    }
 
     const res = await fetch(url.toString());
     if (!res.ok) throw new Error('Failed to fetch cat photos');
@@ -36,13 +61,13 @@ async function fetchCatImages(query, limit = 28) {
 
     // Fallback: if API returns nothing, show a few guaranteed kittens
     if (!urls.length) {
-      return Array.from({ length: Math.min(12, limit) }).map((_, i) => `https://placekitten.com/${400 + (i % 6) * 20}/${400 + ((i + 3) % 6) * 20}`);
+      return Array.from({ length: Math.min(16, limit) }).map((_, i) => `https://placekitten.com/${420 + (i % 6) * 20}/${420 + ((i + 3) % 6) * 20}`);
     }
 
     return urls;
   } catch (e) {
     // Network or API error fallback
-    return Array.from({ length: 12 }).map((_, i) => `https://placekitten.com/${360 + (i % 6) * 30}/${360 + ((i + 2) % 6) * 30}`);
+    return Array.from({ length: 16 }).map((_, i) => `https://placekitten.com/${360 + (i % 6) * 30}/${360 + ((i + 2) % 6) * 30}`);
   }
 }
 
@@ -51,41 +76,76 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [activeSrc, setActiveSrc] = useState(null);
   const [query, setQuery] = useState('');
+  const [vibe, setVibe] = useState('');
+  const [page, setPage] = useState(0);
+
+  const hasQuery = useMemo(() => Boolean((query || '').trim()), [query]);
 
   const runSearch = useCallback(async (q) => {
-    setQuery(q);
+    const nextQuery = (q ?? '').trim();
+    setQuery(nextQuery);
+    setVibe('');
+    setPage(0);
     setLoading(true);
-    const urls = await fetchCatImages(q, 28);
+    const urls = await fetchCatImages({ query: nextQuery, vibe: '', page: 0, limit: 40 });
     setImages(urls);
     setLoading(false);
   }, []);
 
+  const runVibe = useCallback(async (v) => {
+    setVibe(v);
+    setQuery('');
+    setPage(0);
+    setLoading(true);
+    const urls = await fetchCatImages({ query: '', vibe: v, page: 0, limit: 40 });
+    setImages(urls);
+    setLoading(false);
+  }, []);
+
+  const loadMore = useCallback(async () => {
+    const next = page + 1;
+    setPage(next);
+    setLoading(true);
+    const urls = await fetchCatImages({ query: hasQuery ? query : '', vibe: hasQuery ? '' : vibe, page: next, limit: 40 });
+    setImages((prev) => [...prev, ...urls]);
+    setLoading(false);
+  }, [page, hasQuery, query, vibe]);
+
   useEffect(() => {
-    // Initial showcase
-    runSearch('cute');
-  }, [runSearch]);
+    // Initial showcase: cute vibe
+    runVibe('cute');
+  }, [runVibe]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-fuchsia-50 to-indigo-50 text-slate-900">
       <Header />
 
-      <main className="mx-auto max-w-6xl px-4 pt-10 pb-24">
+      <main className="mx-auto max-w-6xl px-4 pt-10 pb-28">
         <section className="mb-6">
           <div className="mx-auto max-w-3xl">
             <SearchBar onSearch={runSearch} />
-            <div className="mt-3 flex items-center justify-between">
-              <p className="text-sm text-slate-500">
-                Results for: <span className="font-medium text-slate-700">{query || '—'}</span>
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-slate-600">
+                Showing: <span className="font-medium text-slate-800">{hasQuery ? `“${query}”` : (vibe ? `${vibe} cats` : 'cats')}</span>
               </p>
-              <button
-                onClick={() => runSearch(query || 'cats')}
-                className="text-sm text-fuchsia-700 hover:underline"
-              >
-                Refresh
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => (hasQuery ? runSearch(query) : runVibe(vibe || 'cute'))}
+                  className="text-sm text-fuchsia-700 hover:underline"
+                >
+                  Refresh
+                </button>
+                <button
+                  onClick={loadMore}
+                  className="rounded-lg bg-fuchsia-600 px-3 py-1.5 text-sm font-medium text-white shadow hover:bg-fuchsia-700 disabled:opacity-50"
+                  disabled={loading}
+                >
+                  Load more cats
+                </button>
+              </div>
             </div>
             <div className="mt-4">
-              <Suggestions onPick={runSearch} />
+              <Suggestions onPick={runSearch} onVibe={runVibe} />
             </div>
           </div>
         </section>

@@ -1,12 +1,12 @@
 import React, { useMemo, useState } from 'react';
-import { Search, RefreshCcw } from 'lucide-react';
+import { Search, RefreshCcw, ExternalLink } from 'lucide-react';
 
 export default function Header() {
   // Multiple avatar sources + robust fallback to ensure an image always shows
   const sources = useMemo(
     () => [
-      'https://placekitten.com/96/96',
       'https://loremflickr.com/96/96/kitten',
+      'https://placekitten.com/96/96',
       // Data URI fallback (cat emoji on gradient) so we never end up with a broken image
       'data:image/svg+xml;utf8,' +
         encodeURIComponent(
@@ -32,6 +32,15 @@ export default function Header() {
     setIdx((i) => (i + 1) % sources.length);
   };
 
+  const handleShare = () => {
+    const niceText = 'Open kitti.cat';
+    const url = window.location.origin;
+    try {
+      navigator.clipboard?.writeText(url);
+    } catch {}
+    window.open(url, '_blank');
+  };
+
   return (
     <header className="sticky top-0 z-20 backdrop-blur supports-[backdrop-filter]:bg-white/60 bg-white/80 border-b border-slate-200">
       <div className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
@@ -55,6 +64,16 @@ export default function Header() {
           </div>
         </div>
         <div className="hidden md:flex items-center text-slate-500 text-sm gap-3">
+          <button
+            type="button"
+            onClick={handleShare}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+            aria-label="Open kitti.cat"
+            title="Open kitti.cat"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            Open kitti.cat
+          </button>
           <div className="hidden sm:flex items-center"><Search className="h-4 w-4 mr-2" /><span>Try: "Siamese", "Bengal", or "black"</span></div>
           <button
             type="button"
