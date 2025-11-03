@@ -4,6 +4,7 @@ const TABS = [
   { key: 'memes', icon: '😹' },
   { key: 'cute', icon: '😺' },
   { key: 'all', icon: '🐾' },
+  { key: 'random', icon: '🎲' },
 ];
 
 export default function Tabs({ current, onChange, t }) {

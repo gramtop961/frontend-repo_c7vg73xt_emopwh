@@ -4,6 +4,7 @@ import SearchBar, { VIBES } from './components/SearchBar';
 import Gallery from './components/Gallery';
 import Tabs from './components/Tabs';
 import Pagination from './components/Pagination';
+import RandomBar from './components/RandomBar';
 
 const I18N = {
   en: {
@@ -25,15 +26,18 @@ const I18N = {
     'actions.open': 'Open',
     'actions.loadMore': 'Show more cats',
     'actions.loading': 'Loading…',
+    'actions.shuffle': 'Shuffle',
     'gallery.empty': "Let's find some cats! Choose a category and hit Search.",
     'gallery.catAlt': 'Cat image',
     'tabs.memes': 'Memes',
     'tabs.cute': 'Cute',
     'tabs.all': 'All',
+    'tabs.random': 'Random',
     'pagination.prev': 'Prev',
     'pagination.next': 'Next',
     'pagination.page': 'Page',
     'pagination.of': 'of',
+    'random.hint': 'Pure randomness — fresh kitty picks every time you shuffle.',
   },
   ru: {
     'header.tagline': 'Найди идеальное настроение котиков',
@@ -54,15 +58,18 @@ const I18N = {
     'actions.open': 'Открыть',
     'actions.loadMore': 'Показать ещё котиков',
     'actions.loading': 'Загрузка…',
+    'actions.shuffle': 'Перемешать',
     'gallery.empty': 'Давай найдём котиков! Выбери категорию и нажми Искать.',
     'gallery.catAlt': 'Изображение кота',
     'tabs.memes': 'Мемчики',
     'tabs.cute': 'Милые',
     'tabs.all': 'Все',
+    'tabs.random': 'Рандом',
     'pagination.prev': 'Назад',
     'pagination.next': 'Вперёд',
     'pagination.page': 'Страница',
     'pagination.of': 'из',
+    'random.hint': 'Чистый рандом — новые котики каждый раз, когда жмёшь Перемешать.',
   },
 };
 
@@ -104,37 +111,44 @@ export default function App() {
   }, []);
 
   const buildUrl = (p, { includeBreed = true, categoryOverride = null } = {}) => {
+    const isRandom = filters.vibe === 'random';
     const isMemes = MEME_CATEGORY_KEYS.has(filters.vibe);
     const base = new URL('https://api.thecatapi.com/v1/images/search');
     base.searchParams.set('limit', String(PER_PAGE));
     base.searchParams.set('page', String(p));
     base.searchParams.set('order', 'Rand');
 
-    const categoryId = categoryOverride ?? vibeMeta[filters.vibe];
-    if (categoryId) base.searchParams.set('category_ids', String(categoryId));
-    if (includeBreed && filters.breed && filters.breed !== 'any') {
-      base.searchParams.set('breed_ids', filters.breed);
+    if (!isRandom) {
+      const categoryId = categoryOverride ?? vibeMeta[filters.vibe];
+      if (categoryId) base.searchParams.set('category_ids', String(categoryId));
+      if (includeBreed && filters.breed && filters.breed !== 'any') {
+        base.searchParams.set('breed_ids', filters.breed);
+      }
+      if (isMemes && !categoryId) {
+        base.searchParams.set('category_ids', '3'); // funny
+      }
     }
-    if (isMemes && !categoryId) {
-      base.searchParams.set('category_ids', '3'); // funny
-    }
+
     return base.toString();
   };
 
   const fetchPage = useCallback(async (targetPage) => {
     setLoading(true);
     try {
+      const isRandom = filters.vibe === 'random';
       const urls = [buildUrl(targetPage)];
 
-      // Fallbacks if breed has low coverage
-      // 1) Same category but without breed
-      if (filters.breed && filters.breed !== 'any') {
-        urls.push(buildUrl(targetPage, { includeBreed: false }));
-      }
-      // 2) If memes selected, supplement with sunglasses/hats
-      if (MEME_CATEGORY_KEYS.has(filters.vibe)) {
-        for (const cat of MEME_SUPPLEMENT_CATS) {
-          urls.push(buildUrl(targetPage, { includeBreed: true, categoryOverride: cat }));
+      if (!isRandom) {
+        // Fallbacks if breed has low coverage
+        // 1) Same category but without breed
+        if (filters.breed && filters.breed !== 'any') {
+          urls.push(buildUrl(targetPage, { includeBreed: false }));
+        }
+        // 2) If memes selected, supplement with sunglasses/hats
+        if (MEME_CATEGORY_KEYS.has(filters.vibe)) {
+          for (const cat of MEME_SUPPLEMENT_CATS) {
+            urls.push(buildUrl(targetPage, { includeBreed: true, categoryOverride: cat }));
+          }
         }
       }
 
@@ -180,6 +194,8 @@ export default function App() {
     fetchPage(p);
   };
 
+  const isRandom = filters.vibe === 'random';
+
   return (
     <div className="min-h-screen relative text-white bg-gradient-to-b from-[#0d0117] via-[#140226] to-[#1a0632]">
       {/* Decorative side cats */}
@@ -198,7 +214,11 @@ export default function App() {
 
       <main className="pt-4 space-y-6">
         <Tabs current={filters.vibe} onChange={(v) => setFilters((f) => ({ ...f, vibe: v }))} t={t} />
-        <SearchBar t={t} filters={filters} setFilters={setFilters} onSearch={handleSearch} breeds={breeds} />
+        {isRandom ? (
+          <RandomBar t={t} onShuffle={() => fetchPage(page)} />
+        ) : (
+          <SearchBar t={t} filters={filters} setFilters={setFilters} onSearch={handleSearch} breeds={breeds} />
+        )}
         <Gallery t={t} images={images} onOpen={setActiveSrc} />
         <div className="max-w-6xl mx-auto px-4">
           <Pagination page={page} totalPages={TOTAL_PAGES} onPageChange={handlePageChange} t={t} />
