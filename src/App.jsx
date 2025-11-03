@@ -4,10 +4,46 @@ import SearchBar from './components/SearchBar';
 import Suggestions from './components/Suggestions';
 import Gallery from './components/Gallery';
 
-function buildImageUrls(query, count = 28) {
-  const q = encodeURIComponent(`cat ${query}`);
-  // Use Unsplash Source with signature parameter to get diverse images without an API key
-  return Array.from({ length: count }).map((_, i) => `https://source.unsplash.com/600x600/?${q}&sig=${i + 1}`);
+// Fetch real cat photos. Primary source: TheCatAPI (no key needed for light usage).
+async function fetchCatImages(query, limit = 28) {
+  try {
+    const q = (query || '').trim();
+
+    // If the user typed a breed-like term, try to resolve it to a breed id
+    let breedId = '';
+    if (q) {
+      const breedRes = await fetch(`https://api.thecatapi.com/v1/breeds/search?q=${encodeURIComponent(q)}`);
+      if (breedRes.ok) {
+        const breeds = await breedRes.json();
+        if (Array.isArray(breeds) && breeds.length > 0) {
+          breedId = breeds[0].id; // take the best match
+        }
+      }
+    }
+
+    const url = new URL('https://api.thecatapi.com/v1/images/search');
+    url.searchParams.set('limit', String(limit));
+    url.searchParams.set('mime_types', 'jpg,png');
+    // Prefer images with breed info if we resolved a breed id
+    if (breedId) url.searchParams.set('breed_ids', breedId);
+
+    const res = await fetch(url.toString());
+    if (!res.ok) throw new Error('Failed to fetch cat photos');
+    const data = await res.json();
+
+    // Normalize into simple array of image URLs
+    const urls = (Array.isArray(data) ? data : []).map((item) => item.url).filter(Boolean);
+
+    // Fallback: if API returns nothing, show a few guaranteed kittens
+    if (!urls.length) {
+      return Array.from({ length: Math.min(12, limit) }).map((_, i) => `https://placekitten.com/${400 + (i % 6) * 20}/${400 + ((i + 3) % 6) * 20}`);
+    }
+
+    return urls;
+  } catch (e) {
+    // Network or API error fallback
+    return Array.from({ length: 12 }).map((_, i) => `https://placekitten.com/${360 + (i % 6) * 30}/${360 + ((i + 2) % 6) * 30}`);
+  }
 }
 
 export default function App() {
@@ -16,14 +52,12 @@ export default function App() {
   const [activeSrc, setActiveSrc] = useState(null);
   const [query, setQuery] = useState('');
 
-  const runSearch = useCallback((q) => {
+  const runSearch = useCallback(async (q) => {
     setQuery(q);
     setLoading(true);
-    const urls = buildImageUrls(q, 28);
-    // Preload a few to make initial view feel instant
+    const urls = await fetchCatImages(q, 28);
     setImages(urls);
-    // Small delay to allow skeletons to render smoothly
-    setTimeout(() => setLoading(false), 400);
+    setLoading(false);
   }, []);
 
   useEffect(() => {
