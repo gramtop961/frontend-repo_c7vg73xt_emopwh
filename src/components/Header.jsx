@@ -1,15 +1,50 @@
-import React from 'react';
-import { Search } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Search, RefreshCcw } from 'lucide-react';
 
 export default function Header() {
+  // Multiple avatar sources + robust fallback to ensure an image always shows
+  const sources = useMemo(
+    () => [
+      'https://placekitten.com/96/96',
+      'https://loremflickr.com/96/96/kitten',
+      // Data URI fallback (cat emoji on gradient) so we never end up with a broken image
+      'data:image/svg+xml;utf8,' +
+        encodeURIComponent(
+          `<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'>
+            <defs>
+              <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
+                <stop offset='0%' stop-color='#f0abfc'/>
+                <stop offset='100%' stop-color='#93c5fd'/>
+              </linearGradient>
+            </defs>
+            <rect width='100%' height='100%' fill='url(#g)'/>
+            <text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle' font-size='56'>🐱</text>
+          </svg>`
+        ),
+    ],
+    []
+  );
+
+  const [idx, setIdx] = useState(0);
+  const avatarSrc = sources[idx] ?? sources[sources.length - 1];
+
+  const handleError = () => {
+    setIdx((i) => (i + 1) % sources.length);
+  };
+
   return (
     <header className="sticky top-0 z-20 backdrop-blur supports-[backdrop-filter]:bg-white/60 bg-white/80 border-b border-slate-200">
       <div className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <img
-            src="https://placekitten.com/96/96"
+            src={avatarSrc}
+            onError={handleError}
             alt="kitti.cat avatar"
-            className="h-10 w-10 rounded-xl object-cover shadow-lg"
+            width={40}
+            height={40}
+            className="h-10 w-10 rounded-xl object-cover shadow-lg select-none"
+            loading="eager"
+            decoding="async"
           />
           <div>
             <h1 className="text-xl font-semibold tracking-tight">
@@ -19,9 +54,18 @@ export default function Header() {
             <p className="text-xs text-slate-500 -mt-0.5">Real cat photos. Search by breed or vibe.</p>
           </div>
         </div>
-        <div className="hidden md:flex items-center text-slate-500 text-sm">
-          <Search className="h-4 w-4 mr-2" />
-          Try: "Siamese", "Bengal", or "black"
+        <div className="hidden md:flex items-center text-slate-500 text-sm gap-3">
+          <div className="hidden sm:flex items-center"><Search className="h-4 w-4 mr-2" /><span>Try: "Siamese", "Bengal", or "black"</span></div>
+          <button
+            type="button"
+            onClick={() => setIdx((i) => (i + 1) % sources.length)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+            aria-label="Change avatar"
+            title="Change avatar"
+          >
+            <RefreshCcw className="h-3.5 w-3.5" />
+            New avatar
+          </button>
         </div>
       </div>
     </header>
