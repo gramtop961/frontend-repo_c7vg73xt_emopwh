@@ -1,36 +1,66 @@
-import React, { useState } from 'react';
-import { Search } from 'lucide-react';
+import React from 'react';
 
-export default function SearchBar({ onSearch, t }) {
-  const [value, setValue] = useState('');
+const VIBES = [
+  { key: 'all', catId: null },
+  { key: 'memes', catId: 3 }, // funny category in TheCatAPI
+  { key: 'hats', catId: 1 },
+  { key: 'space', catId: 2 },
+  { key: 'sunglasses', catId: 4 },
+  { key: 'boxes', catId: 5 },
+  { key: 'ties', catId: 7 },
+  { key: 'sinks', catId: 14 },
+  { key: 'clothes', catId: 15 },
+];
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const q = value.trim();
-    if (!q) return;
-    onSearch(q);
+export default function SearchBar({ t, filters, setFilters, onSearch }) {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full">
-      <div className="relative">
-        <input
-          type="text"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          placeholder={t?.('searchPlaceholder')}
-          className="w-full rounded-2xl border border-slate-200 bg-white/90 px-5 py-4 pr-12 text-[15px] shadow-sm outline-none focus:ring-4 focus:ring-fuchsia-200"
-          aria-label={t?.('searchPlaceholder')}
-        />
+    <div className="max-w-6xl mx-auto px-4 mt-6">
+      <div className="rounded-xl bg-white/10 border border-white/15 p-4 flex flex-col sm:flex-row gap-3 items-stretch">
+        <label className="flex-1">
+          <span className="block text-xs text-white/70 mb-1">{t('search.vibe')}</span>
+          <select
+            name="vibe"
+            value={filters.vibe}
+            onChange={handleChange}
+            className="w-full rounded-lg bg-black/40 border border-white/20 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white/30"
+          >
+            {VIBES.map((v) => (
+              <option key={v.key} value={v.key} className="bg-gray-900">
+                {t(`vibes.${v.key}`)}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="flex-1">
+          <span className="block text-xs text-white/70 mb-1">{t('search.breed')}</span>
+          <select
+            name="breed"
+            value={filters.breed}
+            onChange={handleChange}
+            className="w-full rounded-lg bg-black/40 border border-white/20 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white/30"
+          >
+            <option value="any" className="bg-gray-900">{t('breeds.any')}</option>
+          </select>
+        </label>
+
         <button
-          type="submit"
-          className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center gap-2 rounded-xl bg-gradient-to-br from-fuchsia-600 to-indigo-600 px-4 py-2 text-white shadow-md hover:brightness-110 focus:outline-none focus:ring-4 focus:ring-fuchsia-200"
-          aria-label={t?.('search')}
+          onClick={onSearch}
+          className="shrink-0 inline-flex items-center justify-center rounded-lg bg-white text-gray-900 px-4 py-2 font-semibold hover:bg-white/90 transition-colors"
         >
-          <Search className="h-4 w-4" />
-          <span className="hidden sm:inline">{t?.('search')}</span>
+          {t('actions.search')}
         </button>
       </div>
-    </form>
+      <p className="text-white/60 text-sm mt-2">
+        {t('search.hint')}
+      </p>
+    </div>
   );
 }
+
+export { VIBES };
