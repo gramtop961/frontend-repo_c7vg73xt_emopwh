@@ -5,6 +5,7 @@ import Gallery from './components/Gallery';
 import Tabs from './components/Tabs';
 import Pagination from './components/Pagination';
 import RandomBar from './components/RandomBar';
+import RandomCard from './components/RandomCard';
 
 const I18N = {
   en: {
@@ -38,6 +39,9 @@ const I18N = {
     'pagination.page': 'Page',
     'pagination.of': 'of',
     'random.hint': 'Pure randomness — fresh kitty picks every time you shuffle.',
+    'random.tap': 'Tap to reveal a cat',
+    'random.tapHint': 'Click the frame to get a new random kitty. Click again for another!',
+    'random.new': 'click for new',
   },
   ru: {
     'header.tagline': 'Найди идеальное настроение котиков',
@@ -70,6 +74,9 @@ const I18N = {
     'pagination.page': 'Страница',
     'pagination.of': 'из',
     'random.hint': 'Чистый рандом — новые котики каждый раз, когда жмёшь Перемешать.',
+    'random.tap': 'Нажми здесь — появится котик',
+    'random.tapHint': 'Кликни по рамке, чтобы получить случайного кота. Ещё клик — новый!',
+    'random.new': 'кликни для нового',
   },
 };
 
@@ -133,22 +140,24 @@ export default function App() {
   };
 
   const fetchPage = useCallback(async (targetPage) => {
+    const isRandom = filters.vibe === 'random';
+    if (isRandom) {
+      // In random mode, we don't prefetch a gallery grid
+      setImages([]);
+      setPage(0);
+      return;
+    }
     setLoading(true);
     try {
-      const isRandom = filters.vibe === 'random';
       const urls = [buildUrl(targetPage)];
 
-      if (!isRandom) {
-        // Fallbacks if breed has low coverage
-        // 1) Same category but without breed
-        if (filters.breed && filters.breed !== 'any') {
-          urls.push(buildUrl(targetPage, { includeBreed: false }));
-        }
-        // 2) If memes selected, supplement with sunglasses/hats
-        if (MEME_CATEGORY_KEYS.has(filters.vibe)) {
-          for (const cat of MEME_SUPPLEMENT_CATS) {
-            urls.push(buildUrl(targetPage, { includeBreed: true, categoryOverride: cat }));
-          }
+      // Fallbacks if breed has low coverage
+      if (filters.breed && filters.breed !== 'any') {
+        urls.push(buildUrl(targetPage, { includeBreed: false }));
+      }
+      if (MEME_CATEGORY_KEYS.has(filters.vibe)) {
+        for (const cat of MEME_SUPPLEMENT_CATS) {
+          urls.push(buildUrl(targetPage, { includeBreed: true, categoryOverride: cat }));
         }
       }
 
@@ -160,7 +169,6 @@ export default function App() {
         )
       );
 
-      // Flatten and de-duplicate by URL
       const all = Array.from(
         new Map(
           results
@@ -169,7 +177,6 @@ export default function App() {
         ).values()
       );
 
-      // Cap to PER_PAGE to keep grid clean
       const selected = all.slice(0, PER_PAGE).map((d) => d.url);
       setImages(selected);
       setPage(targetPage);
@@ -215,17 +222,23 @@ export default function App() {
       <main className="pt-4 space-y-6">
         <Tabs current={filters.vibe} onChange={(v) => setFilters((f) => ({ ...f, vibe: v }))} t={t} />
         {isRandom ? (
-          <RandomBar t={t} onShuffle={() => fetchPage(page)} />
+          <>
+            {/* Optional info bar retained for context; you can remove if you want ultra-minimal */}
+            {/* <RandomBar t={t} onShuffle={() => {}} /> */}
+            <RandomCard t={t} />
+          </>
         ) : (
-          <SearchBar t={t} filters={filters} setFilters={setFilters} onSearch={handleSearch} breeds={breeds} />
+          <>
+            <SearchBar t={t} filters={filters} setFilters={setFilters} onSearch={handleSearch} breeds={breeds} />
+            <Gallery t={t} images={images} onOpen={setActiveSrc} />
+            <div className="max-w-6xl mx-auto px-4">
+              <Pagination page={page} totalPages={TOTAL_PAGES} onPageChange={handlePageChange} t={t} />
+              {loading && (
+                <p className="mt-3 text-sm text-white/70">{t('actions.loading')}</p>
+              )}
+            </div>
+          </>
         )}
-        <Gallery t={t} images={images} onOpen={setActiveSrc} />
-        <div className="max-w-6xl mx-auto px-4">
-          <Pagination page={page} totalPages={TOTAL_PAGES} onPageChange={handlePageChange} t={t} />
-          {loading && (
-            <p className="mt-3 text-sm text-white/70">{t('actions.loading')}</p>
-          )}
-        </div>
       </main>
 
       {activeSrc && (
