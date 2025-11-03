@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function ImageCard({ src, alt, onOpen }) {
+export default function ImageCard({ src, alt, onOpen, t }) {
   return (
     <div className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
       <img
@@ -18,13 +18,13 @@ export default function ImageCard({ src, alt, onOpen }) {
           rel="noreferrer"
           className="pointer-events-auto rounded-lg bg-white/90 px-3 py-1.5 text-xs font-medium text-slate-700 shadow hover:bg-white"
         >
-          Open
+          {t?.('open')}
         </a>
         <button
           onClick={onOpen}
           className="pointer-events-auto rounded-lg bg-black/70 px-3 py-1.5 text-xs font-medium text-white shadow hover:bg-black"
         >
-          Preview
+          {t?.('preview')}
         </button>
       </div>
     </div>

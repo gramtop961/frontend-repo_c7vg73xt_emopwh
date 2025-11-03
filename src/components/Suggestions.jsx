@@ -36,11 +36,11 @@ const vibes = [
   'sinks',
 ];
 
-export default function Suggestions({ onPick, onVibe }) {
+export default function Suggestions({ onPick, onVibe, t }) {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">Breeds & colors</h3>
+        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">{t?.('breedsColors')}</h3>
         <div className="flex flex-wrap gap-2">
           {breedAndColor.map((s) => (
             <button
@@ -54,7 +54,7 @@ export default function Suggestions({ onPick, onVibe }) {
         </div>
       </div>
       <div>
-        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">Vibes</h3>
+        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">{t?.('vibes')}</h3>
         <div className="flex flex-wrap gap-2">
           {vibes.map((s) => (
             <button

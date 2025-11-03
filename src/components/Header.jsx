@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { Search, RefreshCcw, ExternalLink } from 'lucide-react';
+import LanguageSwitcher from './LanguageSwitcher';
 
-export default function Header() {
+export default function Header({ lang = 'en', setLang, t }) {
   // Multiple avatar sources + robust fallback to ensure an image always shows
   const sources = useMemo(
     () => [
@@ -33,7 +34,6 @@ export default function Header() {
   };
 
   const handleShare = () => {
-    const niceText = 'Open kitti.cat';
     const url = window.location.origin;
     try {
       navigator.clipboard?.writeText(url);
@@ -60,7 +60,7 @@ export default function Header() {
               <span className="text-fuchsia-700">kitti</span>
               <span className="text-slate-900">.cat</span>
             </h1>
-            <p className="text-xs text-slate-500 -mt-0.5">Real cat photos. Search by breed or vibe.</p>
+            <p className="text-xs text-slate-500 -mt-0.5">{t?.('tagline')}</p>
           </div>
         </div>
         <div className="hidden md:flex items-center text-slate-500 text-sm gap-3">
@@ -68,23 +68,24 @@ export default function Header() {
             type="button"
             onClick={handleShare}
             className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50"
-            aria-label="Open kitti.cat"
-            title="Open kitti.cat"
+            aria-label={t?.('openSite')}
+            title={t?.('openSite')}
           >
             <ExternalLink className="h-3.5 w-3.5" />
-            Open kitti.cat
+            {t?.('openSite')}
           </button>
-          <div className="hidden sm:flex items-center"><Search className="h-4 w-4 mr-2" /><span>Try: "Siamese", "Bengal", or "black"</span></div>
+          <div className="hidden sm:flex items-center"><Search className="h-4 w-4 mr-2" /><span>{t?.('tryExamples')}</span></div>
           <button
             type="button"
             onClick={() => setIdx((i) => (i + 1) % sources.length)}
             className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50"
-            aria-label="Change avatar"
-            title="Change avatar"
+            aria-label={t?.('newAvatar')}
+            title={t?.('newAvatar')}
           >
             <RefreshCcw className="h-3.5 w-3.5" />
-            New avatar
+            {t?.('newAvatar')}
           </button>
+          <LanguageSwitcher lang={lang} onChange={setLang} />
         </div>
       </div>
     </header>

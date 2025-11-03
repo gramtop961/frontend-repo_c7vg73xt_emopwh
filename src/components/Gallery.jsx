@@ -1,7 +1,7 @@
 import React from 'react';
 import ImageCard from './ImageCard';
 
-export default function Gallery({ images, loading, onOpen }) {
+export default function Gallery({ images, loading, onOpen, t }) {
   if (loading) {
     return (
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -15,7 +15,7 @@ export default function Gallery({ images, loading, onOpen }) {
   if (!images?.length) {
     return (
       <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center text-slate-500">
-        Try searching for a breed like "Siamese" or a color like "black".
+        {t?.('emptyPrompt')}
       </div>
     );
   }
@@ -23,7 +23,7 @@ export default function Gallery({ images, loading, onOpen }) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
       {images.map((src, idx) => (
-        <ImageCard key={idx} src={src} alt={`Cat ${idx + 1}`} onOpen={() => onOpen(src)} />)
+        <ImageCard key={idx} src={src} alt={`Cat ${idx + 1}`} onOpen={() => onOpen(src)} t={t} />)
       )}
     </div>
   );

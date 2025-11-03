@@ -16,6 +16,45 @@ const VIBE_TO_CATEGORY = {
   ties: 7,
 };
 
+const I18N = {
+  en: {
+    tagline: 'Real cat photos. Search by breed or vibe.',
+    openSite: 'Open kitti.cat',
+    tryExamples: 'Try: "Siamese", "Bengal", or "black"',
+    searchPlaceholder: 'Search any cat breed or color...',
+    search: 'Search',
+    showing: 'Showing:',
+    refresh: 'Refresh',
+    loadMore: 'Load more cats',
+    breedsColors: 'Breeds & colors',
+    vibes: 'Vibes',
+    emptyPrompt: 'Try searching for a breed like "Siamese" or a color like "black".',
+    open: 'Open',
+    preview: 'Preview',
+    close: 'Close',
+    newAvatar: 'New avatar',
+    cats: 'cats',
+  },
+  ru: {
+    tagline: 'Реальные фото котиков. Ищи по породе или настроению.',
+    openSite: 'Открыть kitti.cat',
+    tryExamples: 'Попробуй: «Сиамская», «Бенгальская» или «черный»',
+    searchPlaceholder: 'Найди котика по породе или окрасу...',
+    search: 'Искать',
+    showing: 'Показываем:',
+    refresh: 'Обновить',
+    loadMore: 'Показать ещё котиков',
+    breedsColors: 'Породы и окрасы',
+    vibes: 'Вибы',
+    emptyPrompt: 'Попробуй ввести породу, например «Сиамская», или цвет, например «черный».',
+    open: 'Открыть',
+    preview: 'Превью',
+    close: 'Закрыть',
+    newAvatar: 'Новый аватар',
+    cats: 'котики',
+  },
+};
+
 // Fetch real cat photos. Primary source: TheCatAPI (no key needed for light usage).
 async function fetchCatImages({ query, vibe, page = 0, limit = 40 }) {
   try {
@@ -78,6 +117,9 @@ export default function App() {
   const [query, setQuery] = useState('');
   const [vibe, setVibe] = useState('');
   const [page, setPage] = useState(0);
+  const [lang, setLang] = useState('ru');
+
+  const t = useCallback((key) => I18N[lang]?.[key] ?? I18N.en[key] ?? key, [lang]);
 
   const hasQuery = useMemo(() => Boolean((query || '').trim()), [query]);
 
@@ -118,40 +160,40 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-fuchsia-50 to-indigo-50 text-slate-900">
-      <Header />
+      <Header lang={lang} setLang={setLang} t={t} />
 
       <main className="mx-auto max-w-6xl px-4 pt-10 pb-28">
         <section className="mb-6">
           <div className="mx-auto max-w-3xl">
-            <SearchBar onSearch={runSearch} />
+            <SearchBar onSearch={runSearch} t={t} />
             <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-slate-600">
-                Showing: <span className="font-medium text-slate-800">{hasQuery ? `“${query}”` : (vibe ? `${vibe} cats` : 'cats')}</span>
+                {t('showing')} <span className="font-medium text-slate-800">{hasQuery ? `“${query}”` : (vibe ? `${vibe} ${t('cats')}` : 'cats')}</span>
               </p>
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => (hasQuery ? runSearch(query) : runVibe(vibe || 'cute'))}
                   className="text-sm text-fuchsia-700 hover:underline"
                 >
-                  Refresh
+                  {t('refresh')}
                 </button>
                 <button
                   onClick={loadMore}
                   className="rounded-lg bg-fuchsia-600 px-3 py-1.5 text-sm font-medium text-white shadow hover:bg-fuchsia-700 disabled:opacity-50"
                   disabled={loading}
                 >
-                  Load more cats
+                  {t('loadMore')}
                 </button>
               </div>
             </div>
             <div className="mt-4">
-              <Suggestions onPick={runSearch} onVibe={runVibe} />
+              <Suggestions onPick={runSearch} onVibe={runVibe} t={t} />
             </div>
           </div>
         </section>
 
         <section>
-          <Gallery images={images} loading={loading} onOpen={setActiveSrc} />
+          <Gallery images={images} loading={loading} onOpen={setActiveSrc} t={t} />
         </section>
       </main>
 
@@ -167,8 +209,8 @@ export default function App() {
             <div className="flex items-center justify-between border-t px-4 py-3 text-sm">
               <span className="text-slate-600 truncate pr-2">{activeSrc}</span>
               <div className="flex gap-2">
-                <a href={activeSrc} target="_blank" rel="noreferrer" className="rounded-lg bg-slate-900 px-3 py-1.5 font-medium text-white hover:bg-black">Open</a>
-                <button onClick={() => setActiveSrc(null)} className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-50">Close</button>
+                <a href={activeSrc} target="_blank" rel="noreferrer" className="rounded-lg bg-slate-900 px-3 py-1.5 font-medium text-white hover:bg-black">{t('open')}</a>
+                <button onClick={() => setActiveSrc(null)} className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-50">{t('close')}</button>
               </div>
             </div>
           </div>
